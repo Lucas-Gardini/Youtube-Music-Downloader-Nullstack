@@ -2,10 +2,6 @@ import Nullstack from "nullstack";
 import "./Home.scss";
 
 class Home extends Nullstack {
-	prepare() {
-		// your code goes here
-	}
-
 	search_params = "";
 	results = {};
 	link = "";
@@ -13,28 +9,31 @@ class Home extends Nullstack {
 	async initiate({ params }) {
 		if ("search_params" in params) {
 			this.search_params = params.search_params;
-			if (String(this.search_params).includes("https")) {
-				const videoInfo = await this.getVideoInfoByUrl({ link: this.search_params });
-				const video = {
-					id: videoInfo.player_response.videoDetails.videoId,
-					title: videoInfo.player_response.videoDetails.title,
-					thumb: videoInfo.player_response.videoDetails.thumbnail.thumbnails[3].url,
-				};
-				// this.callDownload({ video });
-				this.results.items = video;
-			} else {
-				this.results = await this.searchVideos({ search_params: params.search_params });
-			}
+		}
+		if (String(this.search_params).includes("https")) {
+			const videoInfo = await this.getVideoInfoByUrl({ link: this.search_params });
+			const video = {
+				id: videoInfo.player_response.videoDetails.videoId,
+				title: videoInfo.player_response.videoDetails.title,
+				thumb: videoInfo.player_response.videoDetails.thumbnail.thumbnails[3].url,
+			};
+			// this.callDownload({ video });
+			this.results.items = video;
 		} else {
-			this.results.items = [];
+			this.results = await this.searchVideos({ search_params: params.search_params });
 		}
 	}
 
-	static async getVideoInfoByUrl({ download, link }) {
-		const videoInfo = await download.getInfo(
-			`https://www.youtube.com/watch?v=${link.split("watch?v=")[1]}`
-		);
-		return videoInfo;
+	static async getVideoInfoByUrl({ download, link, router }) {
+		link = link.split("watch?v=")[1];
+		link = link.split("&list=")[0];
+		try {
+			const videoInfo = await download.getInfo(link);
+			return videoInfo;
+		} catch (e) {
+			router.url = "/";
+			return {};
+		}
 	}
 
 	static async searchVideos({ search, download, search_params }) {
@@ -87,6 +86,7 @@ class Home extends Nullstack {
 			};
 			http.send();
 		}, 500);
+		this.launchToast();
 	}
 
 	static async downloadVideo({ download, fs, video }) {
@@ -125,6 +125,14 @@ class Home extends Nullstack {
 				.replace(/['"]+/g, "")}.mp3`,
 			highestaudiosize,
 		];
+	}
+
+	async launchToast() {
+		var x = document.getElementById("toast");
+		x.className = "show";
+		setTimeout(function () {
+			x.className = x.className.replace("show", "");
+		}, 5000);
 	}
 
 	render() {
@@ -181,7 +189,7 @@ class Home extends Nullstack {
 										<br />
 									</div>
 								))
-							) : this.results.items.length != 0 &&
+							) : Object.keys(this.results.items).length != 0 ||
 							  typeof this.results.items.length != "undefined" ? (
 								<div class="card m-1" style="width: 18rem;">
 									<img src={this.results.items.thumb} class="card-img-top" />
@@ -199,8 +207,15 @@ class Home extends Nullstack {
 									<br />
 								</div>
 							) : (
-								""
+								<div>"Sem vídeos"</div>
 							)}
+						</div>
+
+						<div id="toast">
+							<div id="img">
+								<i class="fas fa-download"></i>
+							</div>
+							<div id="desc">Download Iniciado</div>
 						</div>
 					</div>
 				</div>
