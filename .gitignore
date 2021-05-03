@@ -1,0 +1,7 @@
+node_modules/
+public/downloads/*
+.development/
+.production/
+package-lock.json
+yarn.lock
+.env
