@@ -1,7 +1,7 @@
 node_modules/
 public/downloads/*
 .development/
-.production/
+# .production/
 package-lock.json
 yarn.lock
 .env
