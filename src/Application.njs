@@ -5,9 +5,13 @@ import ytsr from "ytsr";
 import fs from "fs";
 import Home from "./Home";
 
+import firebase from "./firebase/admin";
+
 class Application extends Nullstack {
 	static async start(context) {
 		const { project } = context;
+		context.storage = firebase.storage;
+		// context.fstorage = fireclient.storage;
 		context.search = ytsr;
 		context.download = ytdl;
 		context.fs = fs;
@@ -34,6 +38,8 @@ class Application extends Nullstack {
 					href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css"
 					rel="stylesheet"
 				/>
+				<title>Youtube Downloader - KowaslkiJr</title>
+				<script src="https://www.gstatic.com/firebasejs/8.4.3/firebase-app.js"></script>
 			</head>
 		);
 	}

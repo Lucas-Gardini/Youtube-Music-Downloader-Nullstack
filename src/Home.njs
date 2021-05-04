@@ -1,4 +1,7 @@
 import Nullstack from "nullstack";
+import firebase from "firebase/app";
+import "firebase/storage";
+
 import "./Home.scss";
 
 class Home extends Nullstack {
@@ -57,39 +60,37 @@ class Home extends Nullstack {
 	}
 
 	async callDownload({ video }) {
-		const result = await this.downloadVideo({ video });
-		const link = result[0];
-		const size = result[1];
-		function download(link) {
+		if (firebase.apps.length < 1) {
+			var firebaseConfig = {
+				apiKey: "AIzaSyD1MLKqLoHU-rJ70FkR6GClQCnipXqsNI8",
+				authDomain: "ytdl-nullstack.firebaseapp.com",
+				projectId: "ytdl-nullstack",
+				storageBucket: "ytdl-nullstack.appspot.com",
+				messagingSenderId: "438283141364",
+				appId: "1:438283141364:web:11705b218e9d688aa49ea1",
+			};
+			firebase.initializeApp(firebaseConfig);
+		}
+		const fstorage = firebase.storage();
+		const video_info = await this.downloadVideo({ video });
+		async function download(video_title) {
+			let reference = await fstorage.ref(`${video_info[0]}.mp3`);
+			const downloadUrl = await reference.getDownloadURL();
 			var a = document.createElement("a");
-			a.href = link;
+			a.href = downloadUrl;
 			a.setAttribute("download", "");
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
 		}
-		let fileSize = 0;
-		const checkFile = setInterval(() => {
-			var http = new XMLHttpRequest();
-			http.open("HEAD", link, true); // true = Asynchronous
-			http.onreadystatechange = function () {
-				if (this.readyState == this.DONE) {
-					if (this.status === 200) {
-						fileSize = this.getResponseHeader("content-length");
-						if (Number(fileSize) >= size) {
-							download(link);
-							clearInterval(checkFile);
-						}
-						console.log("fileSize = " + fileSize);
-					}
-				}
-			};
-			http.send();
-		}, 500);
+		let timeout = (video_info[1] / 1024) * 2;
+		setTimeout(() => {
+			download(video_info[0]);
+		}, timeout);
 		this.launchToast();
 	}
 
-	static async downloadVideo({ download, fs, video }) {
+	static async downloadVideo({ download, fs, video, storage }) {
 		var file;
 		const info = await download.getInfo(`http://www.youtube.com/watch?v=${video.id}`);
 		const formats = info.player_response.streamingData.adaptiveFormats;
@@ -107,24 +108,28 @@ class Home extends Nullstack {
 				highestaudioitag = onlyaudio[c].itag;
 			}
 		}
+
+		const video_title = video.title
+			.replace(/^[\w,\s-]+\.[A-Za-z]$/g, "")
+			.replace("|", "")
+			.replace(/['"]+/g, "")
+			.replace("/", "")
+			.replace("\\", "")
+			.replace("%", "")
+			.replace(">", "")
+			.replace("<", "");
+
+		const file_name = `./public/downloads/${video_title}.mp3`;
+
 		const result = await download(`http://www.youtube.com/watch?v=${video.id}`, {
 			quality: String(highestaudioitag),
 			filter: "audioonly",
-		}).pipe(
-			(file = await fs.createWriteStream(
-				`./public/downloads/${video.title
-					.replace(/^[\w,\s-]+\.[A-Za-z]$/g, "")
-					.replace("|", "")
-					.replace(/['"]+/g, "")}.mp3`
-			))
-		);
-		return [
-			`./downloads/${video.title
-				.replace(/^[\w,\s-]+\.[A-Za-z]$/g, "")
-				.replace("|", "")
-				.replace(/['"]+/g, "")}.mp3`,
-			highestaudiosize,
-		];
+		}).pipe((file = await fs.createWriteStream(file_name)));
+		file.on("finish", async () => {
+			const upload = await storage().bucket().upload(file_name);
+		});
+
+		return [video_title, highestaudiosize];
 	}
 
 	async launchToast() {
