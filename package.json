@@ -5,6 +5,8 @@
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
+		"firebase": "^8.4.3",
+		"firebase-admin": "^9.7.0",
 		"nullstack": "~0.10.0"
 	},
 	"scripts": {
@@ -13,10 +15,7 @@
 	},
 	"dependencies": {
 		"dotenv": "^8.2.0",
-		"firebase": "^8.4.3",
-		"firebase-admin": "^9.7.0",
 		"fs": "*",
-		"googleapis": "^73.0.0",
 		"xmlhttprequest": "^1.8.0",
 		"ytdl-core": "^4.7.0",
 		"ytsr": "^3.5.0"
