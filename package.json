@@ -1,8 +1,8 @@
 {
 	"name": "ytmusicdownloader",
 	"version": "0.0.1",
-	"description": "",
-	"author": "",
+	"description": "A simple youtube music downloader made with nullstack and ytdl",
+	"author": "KowaslskiJr",
 	"license": "ISC",
 	"devDependencies": {
 		"dotenv": "^8.2.0",
@@ -15,6 +15,9 @@
 	"scripts": {
 		"start": "npx webpack --config node_modules/nullstack/webpack.config.js --mode=development --watch",
 		"build": "npx webpack --config node_modules/nullstack/webpack.config.js --mode=production"
+	},
+	"engines": {
+		"node": "12.x"
 	},
 	"dependencies": {
 		"ytsr": "^3.5.0"
