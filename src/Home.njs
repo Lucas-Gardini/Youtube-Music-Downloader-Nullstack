@@ -73,15 +73,31 @@ class Home extends Nullstack {
 		}
 		const fstorage = firebase.storage();
 		const video_info = await this.downloadVideo({ video });
-		async function download(video_title) {
+		async function download() {
 			let reference = await fstorage.ref(`${video_info[0]}.mp3`);
 			const downloadUrl = await reference.getDownloadURL();
-			var a = document.createElement("a");
-			a.href = downloadUrl;
-			a.setAttribute("download", "");
-			document.body.appendChild(a);
-			a.click();
-			document.body.removeChild(a);
+			// var a = document.createElement("a");
+			// a.href = downloadUrl;
+			// a.setAttribute("download", "");
+			// document.body.appendChild(a);
+			// a.click();
+			// document.body.removeChild(a);
+
+			function saveBlob(blob, fileName) {
+				var a = document.createElement("a");
+				a.href = window.URL.createObjectURL(blob);
+				a.download = fileName;
+				a.dispatchEvent(new MouseEvent("click"));
+			}
+
+			var xhr = new XMLHttpRequest();
+			xhr.responseType = "blob";
+			xhr.onload = function (event) {
+				var blob = xhr.response;
+				saveBlob(blob, video_info[0]);
+			};
+			xhr.open("GET", downloadUrl);
+			xhr.send();
 		}
 		let timeout = (video_info[1] / 1024) * 2;
 		setTimeout(() => {
@@ -127,6 +143,7 @@ class Home extends Nullstack {
 		}).pipe((file = await fs.createWriteStream(file_name)));
 		file.on("finish", async () => {
 			const upload = await storage().bucket().upload(file_name);
+			fs.unlinkSync(file_name);
 		});
 
 		return [video_title, highestaudiosize];
@@ -144,7 +161,7 @@ class Home extends Nullstack {
 		return (
 			<div>
 				<div class="container">
-					<h1>YTDL - Nullstack</h1>
+					<h1>Youtube Music Downloader - Nullstack</h1>
 					<form onsubmit={this.ghost_function} class="row g-2 justify-content-md-center">
 						<div class="col-10">
 							<label for="search_params">Pesquise ou digite a url</label>
