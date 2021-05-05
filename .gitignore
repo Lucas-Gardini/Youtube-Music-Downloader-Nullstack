@@ -1,5 +1,5 @@
 node_modules/
-public/downloads/*
+# public/downloads/*
 .development/
 # .production/
 package-lock.json
