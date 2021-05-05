@@ -5,19 +5,18 @@
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
+		"dotenv": "^8.2.0",
 		"firebase": "^8.4.3",
 		"firebase-admin": "^9.7.0",
-		"nullstack": "~0.10.0"
+		"fs": "*",
+		"nullstack": "~0.10.0",
+		"ytdl-core": "^4.7.0"
 	},
 	"scripts": {
 		"start": "npx webpack --config node_modules/nullstack/webpack.config.js --mode=development --watch",
 		"build": "npx webpack --config node_modules/nullstack/webpack.config.js --mode=production"
 	},
 	"dependencies": {
-		"dotenv": "^8.2.0",
-		"fs": "*",
-		"xmlhttprequest": "^1.8.0",
-		"ytdl-core": "^4.7.0",
 		"ytsr": "^3.5.0"
 	},
 	"main": "index.js"
