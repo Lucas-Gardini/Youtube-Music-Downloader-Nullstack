@@ -8,7 +8,7 @@ class Home extends Nullstack {
 	search_params = "";
 	results = {};
 	link = "";
-	isDownloading = false;
+	btnCanDownload = "display: inline";
 
 	async initiate({ params }) {
 		if ("search_params" in params) {
@@ -66,48 +66,49 @@ class Home extends Nullstack {
 	}
 
 	async callDownload({ video }) {
-		if (!this.isDownloading) {
-			if (firebase.apps.length < 1) {
-				var firebaseConfig = {
-					apiKey: "AIzaSyD1MLKqLoHU-rJ70FkR6GClQCnipXqsNI8",
-					authDomain: "ytdl-nullstack.firebaseapp.com",
-					projectId: "ytdl-nullstack",
-					storageBucket: "ytdl-nullstack.appspot.com",
-					messagingSenderId: "438283141364",
-					appId: "1:438283141364:web:11705b218e9d688aa49ea1",
-				};
-				firebase.initializeApp(firebaseConfig);
-			}
-
-			const fstorage = firebase.storage();
-			const video_info = await this.downloadVideo({ video });
-			async function download() {
-				let reference = await fstorage.ref(`${video_info[0]}.mp3`);
-				const downloadUrl = await reference.getDownloadURL();
-
-				function saveBlob(blob, fileName) {
-					var a = document.createElement("a");
-					a.href = window.URL.createObjectURL(blob);
-					a.download = fileName;
-					a.dispatchEvent(new MouseEvent("click"));
-				}
-
-				var xhr = new XMLHttpRequest();
-				xhr.responseType = "blob";
-				xhr.onload = function (event) {
-					var blob = xhr.response;
-					saveBlob(blob, video_info[0]);
-				};
-				xhr.open("GET", downloadUrl);
-				xhr.send();
-			}
-			let timeout = (video_info[1] / 1024) * 2;
-			setTimeout(() => {
-				download(video_info[0]);
-				this.isDownloading = false;
-			}, timeout);
-			this.launchToast();
+		this.btnCanDownload = "display: none";
+		if (firebase.apps.length < 1) {
+			var firebaseConfig = {
+				apiKey: "AIzaSyD1MLKqLoHU-rJ70FkR6GClQCnipXqsNI8",
+				authDomain: "ytdl-nullstack.firebaseapp.com",
+				projectId: "ytdl-nullstack",
+				storageBucket: "ytdl-nullstack.appspot.com",
+				messagingSenderId: "438283141364",
+				appId: "1:438283141364:web:11705b218e9d688aa49ea1",
+			};
+			firebase.initializeApp(firebaseConfig);
 		}
+
+		const fstorage = firebase.storage();
+		const video_info = await this.downloadVideo({ video });
+		async function download() {
+			let reference = await fstorage.ref(`${video_info[0]}.mp3`);
+			const downloadUrl = await reference.getDownloadURL();
+
+			function saveBlob(blob, fileName) {
+				var a = document.createElement("a");
+				a.href = window.URL.createObjectURL(blob);
+				a.download = fileName;
+				a.dispatchEvent(new MouseEvent("click"));
+			}
+
+			var xhr = new XMLHttpRequest();
+			xhr.responseType = "blob";
+			xhr.onload = function (event) {
+				var blob = xhr.response;
+				saveBlob(blob, video_info[0]);
+			};
+			xhr.open("GET", downloadUrl);
+			xhr.send();
+		}
+		let timeout = (video_info[1] / 1024) * 2;
+		// this.results = {};
+		// this.results.items = {};
+		setTimeout(() => {
+			this.btnCanDownload = "display: inline";
+			download(video_info[0]);
+		}, timeout);
+		this.launchToast();
 	}
 
 	static async downloadVideo({ download, fs, video, storage }) {
@@ -161,6 +162,10 @@ class Home extends Nullstack {
 		}, 5000);
 	}
 
+	async redirect({ video }) {
+		window.open(`https://www.youtube.com/watch?v=${video.id}`, "_blank");
+	}
+
 	render() {
 		return (
 			<div>
@@ -200,6 +205,8 @@ class Home extends Nullstack {
 													: ""
 											}
 											class="card-img-top"
+											onclick={this.redirect}
+											video={video}
 										/>
 										<div class="card-body">
 											<h5 class="card-title">{video.title}</h5>
@@ -207,6 +214,7 @@ class Home extends Nullstack {
 										</div>
 										<button
 											class="btn btn-sm btn-primary"
+											style={this.btnCanDownload}
 											onclick={this.callDownload}
 											video={video}
 										>
@@ -215,16 +223,23 @@ class Home extends Nullstack {
 										<br />
 									</div>
 								))
-							) : Object.keys(this.results.items).length != 0 ||
+							) : (Object.keys(this.results.items).length != 0 &&
+									Object.keys(this.results.items).includes("id")) ||
 							  typeof this.results.items.length != "undefined" ? (
 								<div class="card m-1" style="width: 18rem;">
-									<img src={this.results.items.thumb} class="card-img-top" />
+									<img
+										src={this.results.items.thumb}
+										class="card-img-top"
+										onclick={this.redirect}
+										video={this.results.items}
+									/>
 									<div class="card-body">
 										<h5 class="card-title">{this.results.items.title}</h5>
 										{/* <p class="card-text">{video.author}</p> */}
 									</div>
 									<button
 										class="btn btn-sm btn-primary"
+										style={this.btnCanDownload}
 										onclick={this.callDownload}
 										video={this.results.items}
 									>
@@ -233,7 +248,7 @@ class Home extends Nullstack {
 									<br />
 								</div>
 							) : (
-								<div>"Sem vídeos"</div>
+								<div>"Sem vídeos ou Download Iniciado"</div>
 							)}
 						</div>
 
