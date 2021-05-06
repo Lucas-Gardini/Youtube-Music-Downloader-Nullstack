@@ -8,6 +8,7 @@ class Home extends Nullstack {
 	search_params = "";
 	results = {};
 	link = "";
+	isDownloading = false;
 
 	async initiate({ params }) {
 		if ("search_params" in params) {
@@ -65,50 +66,48 @@ class Home extends Nullstack {
 	}
 
 	async callDownload({ video }) {
-		if (firebase.apps.length < 1) {
-			var firebaseConfig = {
-				apiKey: "AIzaSyD1MLKqLoHU-rJ70FkR6GClQCnipXqsNI8",
-				authDomain: "ytdl-nullstack.firebaseapp.com",
-				projectId: "ytdl-nullstack",
-				storageBucket: "ytdl-nullstack.appspot.com",
-				messagingSenderId: "438283141364",
-				appId: "1:438283141364:web:11705b218e9d688aa49ea1",
-			};
-			firebase.initializeApp(firebaseConfig);
-		}
-		const fstorage = firebase.storage();
-		const video_info = await this.downloadVideo({ video });
-		async function download() {
-			let reference = await fstorage.ref(`${video_info[0]}.mp3`);
-			const downloadUrl = await reference.getDownloadURL();
-			// var a = document.createElement("a");
-			// a.href = downloadUrl;
-			// a.setAttribute("download", "");
-			// document.body.appendChild(a);
-			// a.click();
-			// document.body.removeChild(a);
-
-			function saveBlob(blob, fileName) {
-				var a = document.createElement("a");
-				a.href = window.URL.createObjectURL(blob);
-				a.download = fileName;
-				a.dispatchEvent(new MouseEvent("click"));
+		if (!this.isDownloading) {
+			if (firebase.apps.length < 1) {
+				var firebaseConfig = {
+					apiKey: "AIzaSyD1MLKqLoHU-rJ70FkR6GClQCnipXqsNI8",
+					authDomain: "ytdl-nullstack.firebaseapp.com",
+					projectId: "ytdl-nullstack",
+					storageBucket: "ytdl-nullstack.appspot.com",
+					messagingSenderId: "438283141364",
+					appId: "1:438283141364:web:11705b218e9d688aa49ea1",
+				};
+				firebase.initializeApp(firebaseConfig);
 			}
 
-			var xhr = new XMLHttpRequest();
-			xhr.responseType = "blob";
-			xhr.onload = function (event) {
-				var blob = xhr.response;
-				saveBlob(blob, video_info[0]);
-			};
-			xhr.open("GET", downloadUrl);
-			xhr.send();
+			const fstorage = firebase.storage();
+			const video_info = await this.downloadVideo({ video });
+			async function download() {
+				let reference = await fstorage.ref(`${video_info[0]}.mp3`);
+				const downloadUrl = await reference.getDownloadURL();
+
+				function saveBlob(blob, fileName) {
+					var a = document.createElement("a");
+					a.href = window.URL.createObjectURL(blob);
+					a.download = fileName;
+					a.dispatchEvent(new MouseEvent("click"));
+				}
+
+				var xhr = new XMLHttpRequest();
+				xhr.responseType = "blob";
+				xhr.onload = function (event) {
+					var blob = xhr.response;
+					saveBlob(blob, video_info[0]);
+				};
+				xhr.open("GET", downloadUrl);
+				xhr.send();
+			}
+			let timeout = (video_info[1] / 1024) * 2;
+			setTimeout(() => {
+				download(video_info[0]);
+				this.isDownloading = false;
+			}, timeout);
+			this.launchToast();
 		}
-		let timeout = (video_info[1] / 1024) * 2;
-		setTimeout(() => {
-			download(video_info[0]);
-		}, timeout);
-		this.launchToast();
 	}
 
 	static async downloadVideo({ download, fs, video, storage }) {
