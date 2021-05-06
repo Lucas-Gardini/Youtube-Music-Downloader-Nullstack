@@ -28,8 +28,13 @@ class Home extends Nullstack {
 	}
 
 	static async getVideoInfoByUrl({ download, link, router }) {
-		link = link.split("watch?v=")[1];
-		link = link.split("&list=")[0];
+		if (String(link).includes("watch?v=")) {
+			link = link.split("watch?v=")[1];
+			link = link.split("&list=")[0];
+		} else {
+			link = link.split("youtu.be/")[1];
+		}
+
 		try {
 			const videoInfo = await download.getInfo(link);
 			return videoInfo;
