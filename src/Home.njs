@@ -10,6 +10,11 @@ class Home extends Nullstack {
 	link = "";
 	btnCanDownload = "display: inline";
 
+	prepare({ project, page }) {
+		// page.title = `Home`;
+		page.description = `Baixe suas músicas preferidas quando e onde quiser!`;
+	}
+
 	async initiate({ params }) {
 		if ("search_params" in params) {
 			this.search_params = params.search_params;
@@ -170,7 +175,9 @@ class Home extends Nullstack {
 		return (
 			<div>
 				<div class="container">
-					<h1>Youtube Music Downloader - Nullstack</h1>
+					<h1>
+						<i class="fas fa-play-circle"></i>&nbsp;Youtube Music Downloader - Nullstack
+					</h1>
 					<form onsubmit={this.ghost_function} class="row g-2 justify-content-md-center">
 						<div class="col-10">
 							<label for="search_params">Pesquise ou digite a url</label>
@@ -250,6 +257,13 @@ class Home extends Nullstack {
 							) : (
 								<div>"Sem vídeos ou Download Iniciado"</div>
 							)}
+						</div>
+
+						<div class="bottom">
+							<h2>
+								<img src="./favicon-96x96.png" />
+								Feito com Nullstack por: KowalskiJr
+							</h2>
 						</div>
 
 						<div id="toast">
