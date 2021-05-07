@@ -10,6 +10,7 @@
 		"firebase-admin": "^9.7.0",
 		"fs": "*",
 		"nullstack": "~0.10.0",
+		"slugify": "^1.5.1",
 		"ytdl-core": "^4.7.0"
 	},
 	"scripts": {

@@ -1,4 +1,5 @@
 import Nullstack from "nullstack";
+import slugify from "slugify";
 import firebase from "firebase/app";
 import "firebase/storage";
 
@@ -32,6 +33,9 @@ class Home extends Nullstack {
 		} else {
 			this.results = await this.searchVideos({ search_params: params.search_params });
 		}
+		slugify.extend({
+			"|": "",
+		});
 	}
 
 	static async getVideoInfoByUrl({ download, link, router }) {
@@ -140,16 +144,11 @@ class Home extends Nullstack {
 			}
 		}
 
-		const video_title = String(video.title)
-			.replace(/^[\w,\s-]+\.[A-Za-z]$/g, "")
-			.replace("|", "")
-			.replace(/['"]+/g, "")
-			.replace("/", "")
-			.replace("//", "")
-			.replace("\\", "")
-			.replace("%", "")
-			.replace(">", "")
-			.replace("<", "");
+		const video_title = slugify(video.title, {
+			replacement: " ",
+		});
+		console.log(`Original: ${video.title}`);
+		console.log(`Modified: ${video_title}`);
 
 		const file_name = `./public/downloads/${video_title}.mp3`;
 
