@@ -18,35 +18,44 @@ class Home extends Nullstack {
 	}
 
 	async initiate({ params }) {
+		// Checking if someone searched for something
 		if ("search_params" in params) {
 			this.search_params = params.search_params;
 		}
+		// If user searched using a url
 		if (String(this.search_params).includes("https")) {
+			// Getting video info
 			const videoInfo = await this.getVideoInfoByUrl({ link: this.search_params });
 			const video = {
 				id: videoInfo.player_response.videoDetails.videoId,
 				title: videoInfo.player_response.videoDetails.title,
 				thumb: videoInfo.player_response.videoDetails.thumbnail.thumbnails[3].url,
 			};
-			// this.callDownload({ video });
+
 			this.results.items = video;
 		} else {
+			// Searching video using ytsr
 			this.results = await this.searchVideos({ search_params: params.search_params });
 		}
+
+		// Customizing slugify library
 		slugify.extend({
 			"|": "",
 		});
 	}
 
+	// Function for getting video info using a url like https://youtu.be/3Q-cxGwcQeI
 	static async getVideoInfoByUrl({ download, link, router }) {
+		// Getting videoId from link (There is two different types of URLs)
 		if (String(link).includes("watch?v=")) {
-			link = link.split("watch?v=")[1];
-			link = link.split("&list=")[0];
+			videoId = link.split("watch?v=")[1];
+			videoId = link.split("&list=")[0];
 		} else {
-			link = link.split("youtu.be/")[1];
+			videoId = link.split("youtu.be/")[1];
 		}
 
 		try {
+			// Getting video information like Channel, Thumb, Size from ytdl.getInfo();
 			const videoInfo = await download.getInfo(link);
 			return videoInfo;
 		} catch (e) {
@@ -55,29 +64,39 @@ class Home extends Nullstack {
 		}
 	}
 
+	// Function for searching videos without using a URL
 	static async searchVideos({ search, download, search_params }) {
+		// I think this don't work...
 		const options = {
 			limit: 10,
 			pages: 1,
 		};
+		// if Search Params isn't undefined OR has content
 		if (!(typeof search_params === "undefined" || search_params.length <= 0)) {
+			// We search for the videos using the provided params
 			const result = await search(search_params, options);
+			// A little filter for removing a "People also watched" and "Mix" because they don't count as videos
 			result.items = result.items.filter(function (video) {
 				return (
 					video.title !== "People also watched" && String(video.title).indexOf("Mix") < 0
 				);
 			});
 			return result;
+			// if Seach Params is undefined OR contains nothing
 		} else {
+			// We just return a empty object
 			const result = {};
 			result.items = {};
 			return result;
 		}
 	}
 
+	// Function for the client to call the server for a Download
 	async callDownload({ video }) {
+		// We deactivate all the buttons to prevent spam
 		this.btnCanDownload = "display: none";
 		this.isDownloading = true;
+		// We connect to our public firebase (for view files only)
 		if (firebase.apps.length < 1) {
 			var firebaseConfig = {
 				apiKey: "AIzaSyD1MLKqLoHU-rJ70FkR6GClQCnipXqsNI8",
@@ -91,7 +110,9 @@ class Home extends Nullstack {
 		}
 
 		const fstorage = firebase.storage();
+		// Sending a download request to server and getting the title and the file size
 		const video_info = await this.downloadVideo({ video });
+		// Function to download a blob from a XMLHttpRequest that is down there
 		async function download() {
 			let reference = await fstorage.ref(`${video_info[0]}.mp3`);
 			const downloadUrl = await reference.getDownloadURL();
@@ -114,22 +135,23 @@ class Home extends Nullstack {
 			xhr.open("GET", downloadUrl);
 			xhr.send();
 		}
+		// Timeouting the download, because we only want to download when it is fully uploaded to firebase storage
 		let timeout = (video_info[1] / 1024) * 2;
-		// this.results = {};
-		// this.results.items = {};
 		setTimeout(() => {
 			this.btnCanDownload = "display: inline";
 			this.isDownloading = false;
 			download(video_info[0]);
 		}, timeout);
-		// this.launchToast();
 	}
 
+	// Function for the server to download and upload the file
 	static async downloadVideo({ download, fs, video, storage }) {
 		var file;
+		// Using ytdl.getInfo() to get the video avaiable formats and the file size
 		const info = await download.getInfo(`http://www.youtube.com/watch?v=${video.id}`);
 		const formats = info.player_response.streamingData.adaptiveFormats;
 		const onlyaudio = [];
+		// Getting only audio formats
 		for (let c in formats) {
 			if (String(formats[c].mimeType).indexOf("audio") > -1) {
 				onlyaudio.push(formats[c]);
@@ -137,6 +159,8 @@ class Home extends Nullstack {
 		}
 		let highestaudiosize = 0;
 		let highestaudioitag = 0;
+
+		// Setting the highest audio size and tag (used for download)
 		for (let c in onlyaudio) {
 			if (onlyaudio[c].contentLength > highestaudiosize) {
 				highestaudiosize = onlyaudio[c].contentLength;
@@ -144,17 +168,20 @@ class Home extends Nullstack {
 			}
 		}
 
+		// Making the video title compatible for file names
 		const video_title = slugify(video.title, {
 			replacement: " ",
 		});
 
 		const file_name = `./public/downloads/${video_title}.mp3`;
 
+		// Downloading the video and saving to the server
 		const result = await download(`http://www.youtube.com/watch?v=${video.id}`, {
 			quality: String(highestaudioitag),
 			filter: "audioonly",
 		}).pipe((file = await fs.createWriteStream(file_name)));
 		file.on("finish", async () => {
+			// Uploading the file to firebase storage
 			const upload = await storage().bucket().upload(file_name);
 			fs.unlinkSync(file_name);
 		});
@@ -162,18 +189,12 @@ class Home extends Nullstack {
 		return [video_title, highestaudiosize];
 	}
 
-	// async launchToast() {
-	// 	var x = document.getElementById("toast");
-	// 	x.className = "show";
-	// 	setTimeout(function () {
-	// 		x.className = x.className.replace("show", "");
-	// 	}, 5000);
-	// }
-
+	// Function for clearing the params
 	async resetSearch() {
 		this.search_params = "";
 	}
 
+	// Function for redirecting user to the video on youtube
 	async redirect({ video }) {
 		window.open(`https://www.youtube.com/watch?v=${video.id}`, "_blank");
 	}
@@ -283,13 +304,6 @@ class Home extends Nullstack {
 								KowalskiJr
 							</h2>
 						</div>
-
-						{/* <div id="toast">
-							<div id="img">
-								<i class="fas fa-download"></i>
-							</div>
-							<div id="desc">Download Iniciado</div>
-						</div> */}
 
 						{this.isDownloading && (
 							<div class="loader">
