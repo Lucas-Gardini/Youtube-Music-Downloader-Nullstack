@@ -147,8 +147,6 @@ class Home extends Nullstack {
 		const video_title = slugify(video.title, {
 			replacement: " ",
 		});
-		console.log(`Original: ${video.title}`);
-		console.log(`Modified: ${video_title}`);
 
 		const file_name = `./public/downloads/${video_title}.mp3`;
 
