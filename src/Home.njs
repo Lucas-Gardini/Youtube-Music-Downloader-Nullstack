@@ -8,6 +8,7 @@ class Home extends Nullstack {
 	search_params = "";
 	results = {};
 	link = "";
+	isDownloading = false;
 	btnCanDownload = "display: inline";
 
 	prepare({ project, page }) {
@@ -72,6 +73,7 @@ class Home extends Nullstack {
 
 	async callDownload({ video }) {
 		this.btnCanDownload = "display: none";
+		this.isDownloading = true;
 		if (firebase.apps.length < 1) {
 			var firebaseConfig = {
 				apiKey: "AIzaSyD1MLKqLoHU-rJ70FkR6GClQCnipXqsNI8",
@@ -89,8 +91,10 @@ class Home extends Nullstack {
 		async function download() {
 			let reference = await fstorage.ref(`${video_info[0]}.mp3`);
 			const downloadUrl = await reference.getDownloadURL();
-
 			function saveBlob(blob, fileName) {
+				if (!String(fileName).includes("mp3")) {
+					fileName = String(fileName) + ".mp3";
+				}
 				var a = document.createElement("a");
 				a.href = window.URL.createObjectURL(blob);
 				a.download = fileName;
@@ -111,9 +115,10 @@ class Home extends Nullstack {
 		// this.results.items = {};
 		setTimeout(() => {
 			this.btnCanDownload = "display: inline";
+			this.isDownloading = false;
 			download(video_info[0]);
 		}, timeout);
-		this.launchToast();
+		// this.launchToast();
 	}
 
 	static async downloadVideo({ download, fs, video, storage }) {
@@ -159,12 +164,16 @@ class Home extends Nullstack {
 		return [video_title, highestaudiosize];
 	}
 
-	async launchToast() {
-		var x = document.getElementById("toast");
-		x.className = "show";
-		setTimeout(function () {
-			x.className = x.className.replace("show", "");
-		}, 5000);
+	// async launchToast() {
+	// 	var x = document.getElementById("toast");
+	// 	x.className = "show";
+	// 	setTimeout(function () {
+	// 		x.className = x.className.replace("show", "");
+	// 	}, 5000);
+	// }
+
+	async resetSearch() {
+		this.search_params = "";
 	}
 
 	async redirect({ video }) {
@@ -175,11 +184,12 @@ class Home extends Nullstack {
 		return (
 			<div>
 				<div class="container">
+					<br />
 					<h1>
 						<i class="fas fa-play-circle"></i>&nbsp;Youtube Music Downloader - Nullstack
 					</h1>
 					<form onsubmit={this.ghost_function} class="row g-2 justify-content-md-center">
-						<div class="col-10">
+						<div class="col-8">
 							<label for="search_params">Pesquise ou digite a url</label>
 							<input
 								id="search_params"
@@ -195,6 +205,16 @@ class Home extends Nullstack {
 								class="btn btn-success"
 							>
 								<i class="fas fa-search"></i>
+							</button>
+						</div>
+						<div style="display: flex;" class="col-2">
+							<button
+								type="button"
+								style="margin: auto; margin-top: 24px; margin-left: 0px; width: 100px"
+								class="btn btn-danger"
+								onclick={this.resetSearch}
+							>
+								<i class="fas fa-backspace"></i>
 							</button>
 						</div>
 					</form>
@@ -261,17 +281,32 @@ class Home extends Nullstack {
 
 						<div class="bottom">
 							<h2>
-								<img src="./favicon-96x96.png" />
-								Feito com Nullstack por: KowalskiJr
+								Feito com <span style="color: #d22365">Nullstack</span> por:
+								KowalskiJr
 							</h2>
 						</div>
 
-						<div id="toast">
+						{/* <div id="toast">
 							<div id="img">
 								<i class="fas fa-download"></i>
 							</div>
 							<div id="desc">Download Iniciado</div>
-						</div>
+						</div> */}
+
+						{this.isDownloading && (
+							<div class="loader">
+								<div style="text-align: center">
+									<h1 style="color: aliceblue">Salvando o arquivo no servidor</h1>
+									<div class="lds-ring">
+										<div></div>
+										<div></div>
+										<div></div>
+										<div></div>
+									</div>
+									<h2 style="color: aliceblue">Aguarde...</h2>
+								</div>
+							</div>
+						)}
 					</div>
 				</div>
 			</div>
