@@ -140,6 +140,8 @@ class Home extends Nullstack {
 			}
 		}
 
+		console.log(`Video Title = ${video.title}`);
+
 		const video_title = String(video.title)
 			.replaceAll(/^[\w,\s-]+\.[A-Za-z]$/g, "")
 			.replaceAll("|", "")
