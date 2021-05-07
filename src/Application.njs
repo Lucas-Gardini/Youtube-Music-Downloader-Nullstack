@@ -39,7 +39,7 @@ class Application extends Nullstack {
 					rel="stylesheet"
 				/>
 				<title>Youtube Downloader - KowaslkiJr</title>
-				<script src="https://www.gstatic.com/firebasejs/8.4.3/firebase-app.js"></script>
+				{/* <script src="https://www.gstatic.com/firebasejs/8.4.3/firebase-app.js"></script> */}
 			</head>
 		);
 	}
