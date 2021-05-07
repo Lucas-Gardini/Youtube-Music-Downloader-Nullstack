@@ -140,15 +140,16 @@ class Home extends Nullstack {
 			}
 		}
 
-		const video_title = video.title
-			.replace(/^[\w,\s-]+\.[A-Za-z]$/g, "")
-			.replace("|", "")
-			.replace(/['"]+/g, "")
-			.replace("/", "")
-			.replace("\\", "")
-			.replace("%", "")
-			.replace(">", "")
-			.replace("<", "");
+		const video_title = String(video.title)
+			.replaceAll(/^[\w,\s-]+\.[A-Za-z]$/g, "")
+			.replaceAll("|", "")
+			.replaceAll(/['"]+/g, "")
+			.replaceAll("/", "")
+			.replaceAll("//", "")
+			.replaceAll("\\", "")
+			.replaceAll("%", "")
+			.replaceAll(">", "")
+			.replaceAll("<", "");
 
 		const file_name = `./public/downloads/${video_title}.mp3`;
 
