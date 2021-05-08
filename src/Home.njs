@@ -313,7 +313,7 @@ class Home extends Nullstack {
 								>
 									Nullstack
 								</a>
-								por: KowalskiJr
+								&nbsp;por: KowalskiJr
 							</h2>
 						</div>
 
