@@ -49,13 +49,14 @@ class Home extends Nullstack {
 		// Getting videoId from link (There is two different types of URLs)
 		if (String(link).includes("watch?v=")) {
 			videoId = link.split("watch?v=")[1];
+			// Making sure to remove playlist id
 			videoId = link.split("&list=")[0];
 		} else {
 			videoId = link.split("youtu.be/")[1];
 		}
 
 		try {
-			// Getting video information like Channel, Thumb, Size from ytdl.getInfo();
+			// Getting video information like Channel, Thumb, Size, Etc from ytdl.getInfo();
 			const videoInfo = await download.getInfo(link);
 			return videoInfo;
 		} catch (e) {
@@ -82,10 +83,11 @@ class Home extends Nullstack {
 				);
 			});
 			return result;
-			// if Seach Params is undefined OR contains nothing
 		} else {
+			// if Seach Params is undefined OR contains nothing
 			// We just return a empty object
 			const result = {};
+			// Setting items to an empty array just to prevent a bug in the render
 			result.items = {};
 			return result;
 		}
@@ -135,7 +137,7 @@ class Home extends Nullstack {
 			xhr.open("GET", downloadUrl);
 			xhr.send();
 		}
-		// Timeouting the download, because we only want to download when it is fully uploaded to firebase storage
+		// Timeouting the download, because we only want to download when it is fully uploaded to the firebase storage
 		let timeout = (video_info[1] / 1024) * 2;
 		setTimeout(() => {
 			this.btnCanDownload = "display: inline";
@@ -147,7 +149,7 @@ class Home extends Nullstack {
 	// Function for the server to download and upload the file
 	static async downloadVideo({ download, fs, video, storage }) {
 		var file;
-		// Using ytdl.getInfo() to get the video avaiable formats and the file size
+		// Using ytdl.getInfo() to get the video available formats and the file size
 		const info = await download.getInfo(`http://www.youtube.com/watch?v=${video.id}`);
 		const formats = info.player_response.streamingData.adaptiveFormats;
 		const onlyaudio = [];
@@ -170,19 +172,20 @@ class Home extends Nullstack {
 
 		// Making the video title compatible for file names
 		const video_title = slugify(video.title, {
-			replacement: " ",
+			replacement: " ", // Replacing all invalid chars with a space
 		});
 
 		const file_name = `./public/downloads/${video_title}.mp3`;
 
-		// Downloading the video and saving to the server
+		// Downloading the video and saving in the server
 		const result = await download(`http://www.youtube.com/watch?v=${video.id}`, {
 			quality: String(highestaudioitag),
-			filter: "audioonly",
+			filter: "audioonly", // Making sure that is only audio
 		}).pipe((file = await fs.createWriteStream(file_name)));
 		file.on("finish", async () => {
-			// Uploading the file to firebase storage
+			// Uploading the file to the firebase storage when it's fully downloaded
 			const upload = await storage().bucket().upload(file_name);
+			// Deleting the file after the upload
 			fs.unlinkSync(file_name);
 		});
 
@@ -194,7 +197,7 @@ class Home extends Nullstack {
 		this.search_params = "";
 	}
 
-	// Function for redirecting user to the video on youtube
+	// Function for redirecting the user to the video on youtube
 	async redirect({ video }) {
 		window.open(`https://www.youtube.com/watch?v=${video.id}`, "_blank");
 	}
@@ -207,6 +210,8 @@ class Home extends Nullstack {
 					<h1>
 						<i class="fas fa-play-circle"></i>&nbsp;Youtube Music Downloader - Nullstack
 					</h1>
+					{/* For some reason, I need to define a onsubmit at this form for 
+					everything to work. Obs: This function don't even exists */}
 					<form onsubmit={this.ghost_function} class="row g-2 justify-content-md-center">
 						<div class="col-8">
 							<label for="search_params">Pesquise ou digite a url</label>
@@ -300,8 +305,15 @@ class Home extends Nullstack {
 
 						<div class="bottom">
 							<h2>
-								Feito com <span style="color: #d22365">Nullstack</span> por:
-								KowalskiJr
+								Feito com
+								<a
+									href="https://nullstack.app/pt-br"
+									target="_blank"
+									style="color: #d22365"
+								>
+									Nullstack
+								</a>
+								por: KowalskiJr
 							</h2>
 						</div>
 
